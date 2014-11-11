@@ -6,10 +6,10 @@ require 'nominatim/version'
 Gem::Specification.new do |spec|
   spec.name          = "nominatim-client"
   spec.version       = Nominatim::VERSION
-  spec.authors       = ["Horns'n'Hooves"]
-  spec.email         = ["hornsy@hooves.com"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
+  spec.authors       = ["Alexander Menzhinsky", "Sergey Nartimov"]
+  spec.email         = ["dev@transinet.eu"]
+  spec.summary       = %q{Nominatim API ruby client library}
+  spec.description   = %q{Nominatim API ruby client library}
   spec.homepage      = ""
   spec.license       = "MIT"
 
