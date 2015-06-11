@@ -1,15 +1,18 @@
 require 'uri'
+require 'json'
+require 'net/http'
 require 'nominatim/monitor'
 
 module Nominatim
   class Client
-    DEFAULT_ENDPOINT = 'http://nominatim.openstreetmap.org/'
+    DEFAULTS = { endpoint: 'http://nominatim.openstreetmap.org/',
+                 request_timeout: 1 }
 
     EXCEPTIONS = [Net::OpenTimeout, Net::ReadTimeout, Errno::ETIMEDOUT,
                   JSON::ParserError, Monitor::ThresholdError, Timeout::Error]
 
     def initialize(options={})
-      @options = options
+      @options = DEFAULTS.dup
       @monitor = Monitor.new
     end
 
@@ -18,42 +21,38 @@ module Nominatim
     end
 
     def reverse(latitude, longitude)
-      uri = endpoint + 'reverse.php'
-      uri.query = URI.encode_www_form(addressdetails: 1, format: 'json', lat: latitude, lon: longitude)
-
-      @monitor.execute do
-        Timeout.timeout(1) do
-          Net::HTTP.start(uri.host, uri.port) do |http|
-            http.open_timeout = 0.5
-            http.read_timeout = 0.5
-
-            request  = Net::HTTP::Get.new(uri)
-            response = http.request(request)
-
-            JSON.parse(response.body)
-          end
-        end
-      end
-    rescue *EXCEPTIONS
-      nil
+      request('reverse.php', lat: latitude, lon: longitude)
     end
 
     def search(text)
-      uri = endpoint + 'search.php'
-      uri.query = URI.encode_www_form(addressdetails: 1, format: 'json', q: text)
-
-      Net::HTTP.start(uri.host, uri.port) do |http|
-        request  = Net::HTTP::Get.new(uri)
-        response = http.request(request)
-
-        JSON.parse(response.body)
-      end
+      request('search.php', q: text)
     end
 
     private
 
-    def endpoint
-      URI(@options[:endpoint] || DEFAULT_ENDPOINT)
+    def request(path, params)
+      uri = endpoint(path, params)
+
+      @monitor.execute do
+        begin
+          Timeout.timeout(@options[:request_timeout]) do
+            Net::HTTP.start(uri.host, uri.port) do |http|
+              request  = Net::HTTP::Get.new(uri)
+              response = http.request(request)
+
+              JSON.parse(response.body)
+            end
+          end
+        rescue *EXCEPTIONS
+          nil
+        end
+      end
+    end
+
+    def endpoint(path, params = {})
+      uri = URI(@options[:endpoint])
+      uri.query = URI.encode_www_form(params.merge(addressdetails: 1, format: :json))
+      uri
     end
   end
 end
