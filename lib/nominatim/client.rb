@@ -6,7 +6,7 @@ require 'nominatim/monitor'
 module Nominatim
   class Client
     DEFAULTS = { endpoint: 'http://nominatim.openstreetmap.org/',
-                 request_timeout: 1 }
+                 request_timeout: 5 }
 
     EXCEPTIONS = [Net::OpenTimeout, Net::ReadTimeout, Errno::ETIMEDOUT,
                   JSON::ParserError, Monitor::ThresholdError, Timeout::Error]
