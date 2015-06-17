@@ -11,7 +11,7 @@ module Nominatim
     EXCEPTIONS = [Net::OpenTimeout, Net::ReadTimeout, Errno::ETIMEDOUT,
                   JSON::ParserError, Monitor::ThresholdError, Timeout::Error]
 
-    def initialize(options={})
+    def initialize(options = {})
       @options = DEFAULTS.dup
       @monitor = Monitor.new
     end
@@ -31,7 +31,7 @@ module Nominatim
     private
 
     def request(path, params)
-      uri = endpoint(path, params)
+      uri = uri(path, params)
 
       @monitor.execute do
         begin
@@ -49,10 +49,14 @@ module Nominatim
       end
     end
 
-    def endpoint(path, params = {})
-      uri = URI(@options[:endpoint])
+    def uri(path, params = {})
+      uri = endpoint + path
       uri.query = URI.encode_www_form(params.merge(addressdetails: 1, format: :json))
       uri
+    end
+
+    def endpoint
+      @endpoint ||= URI(@options[:endpoint])
     end
   end
 end
